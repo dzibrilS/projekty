@@ -1,0 +1,355 @@
+ 
+   <h2>Wyszukiwanie zdjęcia na podstawie numeru wewnętrznego</h2>
+    <input type="text" id="numerWew" placeholder="Numer Wewnętrzny">
+    <button id="searchBtn">Szukaj</button>
+
+ <h3>Zdjęcie detalu:</h3>
+    <img id="image" src="" alt="Obrazek" style="max-width: 100%; height: auto;">
+
+
+
+document.getElementById("searchBtn").addEventListener("click", function() {
+            let numer = document.getElementById("numerWew").value;
+            if (numer) {
+                fetch(`http://localhost/technipro/save.php?numer_wewnętrzny=${numer}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ZdjęcieDetalu) {
+                            const imageElement = document.getElementById("image");
+                            imageElement.src = data.ZdjęcieDetalu;  // Zaktualizuj źródło obrazu
+                        } else {
+                            alert("Nie znaleziono zdjęcia!");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Błąd: ", error);
+                        alert("Wystąpił problem z połączeniem.");
+                    });
+            } else {
+                alert("Proszę wpisać numer wewnętrzny!");
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+// Zapytanie do bazy danych, aby znaleźć zdjęcie na podstawie numeru wewnętrznego
+    $stmt = $conn->prepare("SELECT ZdjęcieDetalu FROM tblbazadetali WHERE NumerWewnętrzny = ?");
+    $stmt->bind_param("s", $numerWew);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        // Zwróć względną ścieżkę do zdjęcia
+        echo json_encode(['ZdjęcieDetalu' => '/technipro/zdjecia_detale/' . basename($row['ZdjęcieDetalu'])]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Nie znaleziono zdjęcia dla tego numeru wewnętrznego']);
+    }
+
+    $stmt->close();
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwanie zdjęć</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        header, footer { background: #333; color: white; text-align: center; padding: 1rem; }
+        main { flex: 1; display: flex; padding: 1rem; }
+        nav { width: 30%; background: #f4f4f4; padding: 1rem; }
+        section { flex: 1; padding: 1rem; background: #ddd; }
+        input { padding: 5px; border: 1px solid #ccc; margin-bottom: 10px; }
+        #galleryImage, #image { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+        #tekst1 { text-align: center; }
+        button { padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <header><h3>Baza Danych TechniPro</h3></header>
+    <main>
+        <nav>
+            <h2 id="tekst1">Dane wyrobu</h2>
+            <form id="DaneForm">
+                <input type="text" id="numerWew" placeholder="Numer Wewnętrzny" style="width: 100%; height: 50px;">
+                <button type="button" id="searchBtn">Szukaj</button>
+            </form>
+            <h3>Zdjęcie detalu:</h3>
+            <img id="image" src="" alt="Obrazek">
+            <div style="text-align: center;">
+                <button id="prev">◀ Poprzedni</button>
+                <button id="next">Następny ▶</button>
+            </div>
+        </nav>
+        <section>
+            <h2 style="color:red;">Ilość sztuk oraz rodzaj wad</h2>
+            <form id="dataForm">
+                <input type="text" name="ilosc1" id="ilosc1" placeholder="Ilość">
+                <input type="text" name="wada1" id="wada1" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc2" id="ilosc2" placeholder="Ilość">
+                <input type="text" name="wada2" id="wada2" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc3" id="ilosc3" placeholder="Ilość">
+                <input type="text" name="wada3" id="wada3" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc4" id="ilosc4" placeholder="Ilość">
+                <input type="text" name="wada4" id="wada4" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc5" id="ilosc5" placeholder="Ilość">
+                <input type="text" name="wada5" id="wada5" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc6" id="ilosc6" placeholder="Ilość">
+                <input type="text" name="wada6" id="wada6" placeholder="Rodzaj wady"><br>
+                <h2>Operator i Data</h2>
+                <input type="text" name="operator" id="operator" placeholder="Nr Operatora">
+                <input type="date" name="data" id="data">
+                <button type="submit">Zapisz</button>
+            </form>
+            <form id="boxCheck">
+                <h3>rodzaj pracy</h3>
+               przepakowanie <input type="checkbox" name="przepakowanie" id="przep">
+                selekcja <input type="checkbox" name="selekcja" id="sel">
+                montaż <input type="checkbox" name="montaż" id="mon">
+               praca przy maszynie <input type="checkbox" name="praca" id="prac">
+            </form>
+            <p id="responseMessage"></p>
+            <a href="http://10.0.1.149/phpmyadmin";><button>Baza Danych</button></a>
+        </section>
+    </main>
+
+    <script>
+        let imagePaths = [];
+        let currentImageIndex = 0;
+
+        // Wyszukiwanie zdjęcia po numerze wewnętrznym
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            const numer = document.getElementById("numerWew").value;
+            if (numer) {
+                fetch(`save.php?numer_wewnętrzny=${numer}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ZdjęcieDetalu) {
+                            document.getElementById("image").src = data.ZdjęcieDetalu;
+                        } else {
+                            alert("Nie znaleziono zdjęcia!");
+                        }
+                    })
+                    .catch(error => alert("Wystąpił problem z połączeniem."));
+            } else {
+                alert("Proszę wpisać numer wewnętrzny!");
+            }
+        });
+
+        // Ładowanie wszystkich zdjęć z serwera
+        function loadImages() {
+            fetch('save.php?action=get_images')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.images && data.images.length > 0) {
+                        imagePaths = data.images;
+                        displayImage();
+                    } else {
+                        console.error("Brak obrazów w odpowiedzi serwera");
+                    }
+                })
+                .catch(error => console.error("Błąd podczas ładowania obrazów:", error));
+        }
+
+        // Wyświetlanie bieżącego zdjęcia
+        function displayImage() {
+            const imageElement = document.getElementById("image");
+            if (imagePaths.length > 0) {
+                imageElement.src = imagePaths[currentImageIndex];
+            } else {
+                imageElement.src = "";
+                alert("Nie znaleziono obrazów!");
+            }
+        }
+
+        // Obsługa przycisków "Następny" i "Poprzedni"
+        document.getElementById("prev").addEventListener("click", () => {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                displayImage();
+            }
+        });
+
+        document.getElementById("next").addEventListener("click", () => {
+            if (currentImageIndex < imagePaths.length - 1) {
+                currentImageIndex++;
+                displayImage();
+            }
+        });
+
+        // Wczytaj obrazy przy starcie strony
+        window.onload = loadImages;
+
+        // Obsługa formularza
+        document.getElementById("dataForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('save.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("responseMessage").textContent = data.message;
+            })
+            .catch(error => console.error("Błąd: ", error));
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<?php
+header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Połączenie z bazą danych
+$servername = "10.0.1.149";
+$username = "root";
+$password = "123";
+$dbname = "bazadanych";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Sprawdzenie połączenia
+if ($conn->connect_error) {
+    die(json_encode(['status' => 'error', 'message' => 'Błąd połączenia: ' . $conn->connect_error]));
+}
+
+// Obsługa POST - zapis danych
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $ilosc1 = $_POST['ilosc1'] ?? 0;
+    $wada1 = $_POST['wada1'] ?? '';
+    $ilosc2 = $_POST['ilosc2'] ?? 0;
+    $wada2 = $_POST['wada2'] ?? '';
+    $ilosc3 = $_POST['ilosc3'] ?? 0;
+    $wada3 = $_POST['wada3'] ?? '';
+    $ilosc4 = $_POST['ilosc4'] ?? 0;
+    $wada4 = $_POST['wada4'] ?? '';
+    $ilosc5 = $_POST['ilosc5'] ?? 0;
+    $wada5 = $_POST['wada5'] ?? '';
+    $ilosc6 = $_POST['ilosc6'] ?? 0;
+    $wada6 = $_POST['wada6'] ?? '';
+    $operator = $_POST['operator'] ?? '';
+    $data = $_POST['data'] ?? date('Y-m-d');
+
+    // Zapis operatora
+    $stmt_operator = $conn->prepare("INSERT INTO operatorzy (operator, data) VALUES (?, ?)");
+    $stmt_operator->bind_param("ss", $operator, $data);
+    $stmt_operator->execute();
+
+    // Zapis wad
+    $stmt_wady = $conn->prepare("
+        INSERT INTO wady (ilosc1, wada1, ilosc2, wada2, ilosc3, wada3, ilosc4, wada4, ilosc5, wada5, ilosc6, wada6)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    $stmt_wady->bind_param(
+        "ississississ", 
+        $ilosc1, $wada1, $ilosc2, $wada2, $ilosc3, $wada3, 
+        $ilosc4, $wada4, $ilosc5, $wada5, $ilosc6, $wada6
+    );
+
+    if ($stmt_wady->execute()) {
+        echo json_encode(['status' => 'success', 'message' => 'Dane zapisane poprawnie!']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Błąd zapisu danych: ' . $stmt_wady->error]);
+    }
+
+    $stmt_operator->close();
+    $stmt_wady->close();
+}
+
+// Obsługa GET - wyszukiwanie zdjęcia po numerze wewnętrznym
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['numer_wewnętrzny'])) {
+    $numerWew = $_GET['numer_wewnętrzny'];
+
+    $stmt = $conn->prepare("SELECT ZdjęcieDetalu FROM tblbazadetali WHERE NumerWewnętrzny = ?");
+    $stmt->bind_param("s", $numerWew);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        echo json_encode(['ZdjęcieDetalu' => 'zdjecia_detale/' . basename($row['ZdjęcieDetalu'])]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Nie znaleziono zdjęcia dla tego numeru wewnętrznego']);
+    }
+
+    $stmt->close();
+}
+
+// Obsługa GET - pobieranie listy wszystkich zdjęć
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'get_images') {
+    $stmt = $conn->prepare("SELECT ZdjęcieDetalu FROM tblbazadetali");
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $images = [];
+    while ($row = $result->fetch_assoc()) {
+        $images[] = 'zdjecia_detale/' . basename($row['ZdjęcieDetalu']);
+    }
+
+    echo json_encode(['images' => $images]);
+    $stmt->close();
+}
+
+$conn->close();
+exit();
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
