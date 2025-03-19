@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwanie zdjęć</title>
+    <style>
+        * 
+        { 
+         margin: 0;
+         padding: 0; 
+         box-sizing: 
+         border-box; 
+         }
+
+        body 
+        { 
+        font-family: 
+        Arial, sans-serif; 
+        display: flex; 
+        flex-direction: column;
+         min-height: 100vh; 
+         }
+
+        header, footer 
+        { 
+            background: #333;
+             color: white; 
+             text-align: center;
+              padding: 1rem; 
+            }
+        main 
+        { 
+            flex: 1;
+             display: flex;
+              padding: 1rem;
+             }
+        nav 
+        { 
+            width: 30%;
+             background: #f4f4f4; 
+             padding: 1rem; 
+            }
+        section 
+        { 
+            flex: 1; 
+            padding: 1rem;
+             background: #ddd;
+             }
+        input
+         { 
+            padding: 5px; 
+            border: 1px solid #ccc;
+             margin-bottom: 10px; 
+            }
+        #galleryImage, #image
+         { 
+            max-width: 100%;
+             height: auto; 
+             display: block;
+              margin: 0 auto;
+             }
+        #tekst1 
+        { 
+            text-align: center;
+        }
+        button
+         { 
+            padding: 10px; 
+            cursor: pointer;
+        }
+        
+       
+    </style>
+</head>
+<body>
+    <header><h3>Baza Danych TechniPro</h3></header>
+    <main>
+        <nav>
+            <h2 id="tekst1">Dane wyrobu</h2>
+            <form id="DaneForm">
+                <input type="text" id="numerWew" placeholder="Numer Wewnętrzny" style="width: 100%; height: 50px;">
+                <input type="text" id="nazwaDet" placeholder="Nazwa Detalu" style="width: 100%; height: 50px;">
+                <input type="text" id="numerRys" placeholder="Numer Rysunku" style="width: 100%; height: 50px;">
+
+                <button type="button" id="searchBtn">Szukaj</button>
+            </form>
+            <h3>Zdjęcie detalu:</h3>
+            <img id="image" src="" alt="Obrazek">
+            <div style="text-align: center;">
+                <button id="prev">◀ Poprzedni</button>
+                <button id="next">Następny ▶</button>
+            </div>
+             <form id="DaneForm1">
+                <br>
+                <input type="text" id="cyfrDet" placeholder="5 ostatnich cyfr partii detalu" style="width: 100%; height: 50px;">
+                <input type="text" id="dataProd" placeholder="data produkcji" style="width: 100%; height: 50px;">
+                <input type="text" id="oper" placeholder="operatorzy" style="width: 100%; height: 50px;">
+
+                <button type="submit">zapisz</button>
+            </form>
+        </nav>
+        <section>
+            <h2 style="color:red;">Ilość sztuk oraz rodzaj wad</h2>
+            <form id="dataForm">
+
+                <input type="text" name="ilosc1" id="ilosc1" placeholder="Ilość">
+                <input type="text" name="wada1" id="wada1" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc2" id="ilosc2" placeholder="Ilość">
+                <input type="text" name="wada2" id="wada2" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc3" id="ilosc3" placeholder="Ilość">
+                <input type="text" name="wada3" id="wada3" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc4" id="ilosc4" placeholder="Ilość">
+                <input type="text" name="wada4" id="wada4" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc5" id="ilosc5" placeholder="Ilość">
+                <input type="text" name="wada5" id="wada5" placeholder="Rodzaj wady"><br>
+                <input type="text" name="ilosc6" id="ilosc6" placeholder="Ilość">
+                <input type="text" name="wada6" id="wada6" placeholder="Rodzaj wady"><br>
+                <h2>Operator i Data</h2>
+                <input type="text" name="operator" id="operator" placeholder="Nr Operatora">
+                <input type="date" name="data" id="data">
+                <br><br>
+                <h3>rodzaj pracy</h3>
+                 <label for="check">przepakowanie</label> 
+                 <input type="checkbox" name="przepakowanie" id="przep">
+                <label for="check">selekcja</label>
+                <input type="checkbox" name="selekcja" id="sel">
+                 <label for="check">montaż</label>
+                 <input type="checkbox" name="montaż" id="mon">
+                 <label for="check">praca przy maszynie</label>
+                 <input type="checkbox" name="praca" id="prac">
+                <br><br>
+                <input type="text" name="wykonaneSztuk" id="wykSztuk" placeholder="ilość wszystkich wykonanych sztuk" style="width: 330px; height: 50px;"><br>
+                <input type="text" name="czasWykonania" id="czasWyk" placeholder="czas czekania(h)"  style="width: 330px; height: 50px;"><br>
+                <input type="text" name="czasCzekania" id="czasCzek" placeholder="czas czekania na przywiezeinie produktu z magazynu(h)" style="width: 330px; height: 50px;">
+                <br>
+                <button type="submit">Zapisz</button>
+                <a href="http://10.0.1.149/phpmyadmin"><button>Baza Danych</button></a>
+            </form>
+
+
+            <p id="responseMessage"></p>
+          
+        </section>
+    </main>
+
+    <script>
+        let imagePaths = [];
+        let currentImageIndex = 0;
+
+        // Wyszukiwanie zdjęcia po numerze wewnętrznym
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            const numer = document.getElementById("numerWew").value;
+            if (numer) {
+                fetch(`save.php?numer_wewnętrzny=${numer}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ZdjęcieDetalu) {
+                            document.getElementById("image").src = data.ZdjęcieDetalu;
+                        } else {
+                            alert("Nie znaleziono zdjęcia!");
+                        }
+                    })
+                    .catch(error => alert("Wystąpił problem z połączeniem."));
+            } else {
+                alert("Proszę wpisać numer wewnętrzny!");
+            }
+        });
+
+        // Ładowanie wszystkich zdjęć z serwera
+        function loadImages() {
+            fetch('save.php?action=get_images')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.images && data.images.length > 0) {
+                        imagePaths = data.images;
+                        displayImage();
+                    } else {
+                        console.error("Brak obrazów w odpowiedzi serwera");
+                    }
+                })
+                .catch(error => console.error("Błąd podczas ładowania obrazów:", error));
+        }
+
+        // Wyświetlanie bieżącego zdjęcia
+        function displayImage() {
+            const imageElement = document.getElementById("image");
+            if (imagePaths.length > 0) {
+                imageElement.src = imagePaths[currentImageIndex];
+            } else {
+                imageElement.src = "";
+                alert("Nie znaleziono obrazów!");
+            }
+        }
+
+        // Obsługa przycisków "Następny" i "Poprzedni"
+        document.getElementById("prev").addEventListener("click", () => {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                displayImage();
+            }
+        });
+
+        document.getElementById("next").addEventListener("click", () => {
+            if (currentImageIndex < imagePaths.length - 1) {
+                currentImageIndex++;
+                displayImage();
+            }
+        });
+
+        // Wczytaj obrazy przy starcie strony
+        window.onload = loadImages;
+
+        // Obsługa formularza
+        document.getElementById("dataForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('save.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("responseMessage").textContent = data.message;
+            })
+            .catch(error => console.error("Błąd: ", error));
+        });
+    </script>
+</body>
+</html>
