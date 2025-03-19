@@ -1,0 +1,306 @@
+<?php
+header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Połączenie z bazą danych
+$servername = "localhost";
+$username = "root";
+$password = "123";  // Zmień na odpowiednie hasło
+$dbname = "bazadanych";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Sprawdzenie połączenia
+if ($conn->connect_error) {
+    die(json_encode(['status' => 'error', 'message' => 'Błąd połączenia: ' . $conn->connect_error]));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Walidacja danych
+    $ilosc1 = $_POST['ilosc1'] ?? 0;
+    $wada1 = $_POST['wada1'] ?? '';
+    // ... pozostałe pola
+
+    // Zapis danych do bazy
+    $stmt_wady = $conn->prepare("INSERT INTO wady (ilosc1, wada1) VALUES (?, ?)");
+    $stmt_wady->bind_param("is", $ilosc1, $wada1);
+    
+    if ($stmt_wady->execute()) {
+        echo json_encode(['status' => 'success', 'message' => 'Dane zapisane poprawnie!']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Błąd zapisu danych: ' . $stmt_wady->error]);
+    }
+
+    $stmt_wady->close();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Wyszukiwanie zdjęcia na podstawie numeru wewnętrznego
+    $numerWew = $_GET['numer_wewnętrzny'];
+
+    $stmt = $conn->prepare("SELECT ZdjęcieDetalu FROM tblbazadetali WHERE NumerWewnętrzny = ?");
+    $stmt->bind_param("s", $numerWew);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        echo json_encode(['ZdjęcieDetalu' => '/technipro/zdjecia_detale/' . basename($row['ZdjęcieDetalu'])]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Nie znaleziono zdjęcia dla tego numeru wewnętrznego']);
+    }
+
+    $stmt->close();
+}
+
+// if (isset($_GET['action']) && $_GET['action'] === 'get_images') {
+//     // Ścieżka do katalogu z obrazami (relatywna do bieżącego katalogu)
+//     $imageDir = 'zdjecia_detale';  // Katalog ze zdjęciami
+
+//     // Tablica na nazwy obrazów
+//     $images = [];
+
+//     // Sprawdź, czy katalog istnieje
+//     if (is_dir($imageDir)) {
+//         // Pobierz listę plików z katalogu
+//         $files = scandir($imageDir);
+//         foreach ($files as $file) {
+//             // Sprawdź, czy plik ma rozszerzenie obrazu (jpg, jpeg, png, gif)
+//             if (in_array(pathinfo($file, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png', 'gif'])) {
+//                 $images[] = $file;  // Dodaj nazwę pliku do tablicy obrazów
+//             }
+//         }
+//     }
+
+//     // Zwróć wyniki w formacie JSON
+//     echo json_encode(['images' => $images]);
+// } else {
+//     // W przypadku błędu lub nieprawidłowego żądania zwróć błąd
+//     echo json_encode(['error' => 'Nieprawidłowe żądanie']);
+// }
+
+$conn->close();
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwanie zdjęć</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header, footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            padding: 1rem;
+        }
+        nav {
+            width: 30%;
+            background: #f4f4f4;
+            padding: 1rem;
+        }
+        section {
+            flex: 1;
+            padding: 1rem;
+            background: #ddd;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input {
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+        #galleryImage {
+            max-width: 100%;
+            height: auto;
+        }
+        #tekst1 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+  
+    <header>
+        <h3>Baza Danych TechniPro</h3>
+    </header>
+    <main>
+        <nav>
+            <h2 id="tekst1">Dane wyrobu</h2>
+            <form id="DaneForm">
+                <div class="inp1">
+                    <input type="text" name="numerWew" id="numerWew" placeholder="Numer Wewnętrzny" style="width:400px ; height:50px;">
+                    <input type="text" name="NazwaDet" id="NazwaD" placeholder="Nazwa Detalu" style="width:400px ; height:50px;">
+                    <input type="text" name="NumerRysunku" id="NumerR" placeholder="Numer Rysunku" style="width:400px ; height:50px;">
+                    <br>
+                    <button type="button" id="searchBtn">Szukaj</button> <!-- Zmieniono na type="button" -->
+                </div>
+            </form>
+            <h3>Zdjęcie detalu:</h3>
+            <img id="galleryImage" src="" alt="Obrazek" max-width="250px" max-height="250px">
+            <div style="text-align: center;">
+                <button id="prev">◀ Poprzedni</button>
+                <button id="next">Następny ▶</button>
+            </div>
+            <h2 id="tekst1">Dane z etykiety</h2>
+            <form id="DaneFormu">
+                <div class="inp2">
+                    <input type="text" name="Liczby5" id="Liczbyost5" placeholder="5 ostatnich cyfr parti detalu" style="width:400px ; height:50px;">
+                    <input type="text" name="DataProdukcji" id="DataPro" placeholder="Data produkcji" style="width:400px ; height:50px;">
+                    <input type="text" name="operatorzy" id="operatorzy1" placeholder="Operatorzy" style="width:400px ; height:50px;">
+                </div>
+            </form>
+        </nav>
+        <section>
+            <h2 style="color:red;">Ilość sztuk oraz rodzaj wad</h2>
+            <form id="dataForm">
+                <div class="input-group">
+                    <input type="text" name="ilosc1" id="ilosc1" placeholder="Ilość">
+                    <input type="text" name="wada1" id="wada1" placeholder="Rodzaj wady">
+                </div>
+                <!-- Dodaj inne pola jak w oryginalnym kodzie -->
+                <button type="submit" onclick="sendData()">Zapisz</button>
+            </form>
+            <p id="responseMessage"></p>
+           
+        </section>
+    </main>
+
+    <script>
+        // Funkcja do wysyłania danych
+        function sendData() {
+            const numerWew = document.getElementById('numerWew').value;
+            const nazwaDetali = document.getElementById('NazwaD').value;
+            const numerRysunku = document.getElementById('NumerR').value;
+
+            const formData = new FormData(document.getElementById('dataForm'));
+
+            fetch('http://localhost/technipro/save.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('responseMessage').textContent = data.message;
+            })
+            .catch(error => console.error("Błąd: ", error));
+        }
+
+        document.getElementById("searchBtn").addEventListener("click", function(event) {
+            event.preventDefault();  // Zapobiegamy domyślnemu zachowaniu formularza
+            let numer = document.getElementById("numerWew").value;
+            if (numer) {
+                fetch(`http://localhost/technipro/save.php?numer_wewnętrzny=${numer}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ZdjęcieDetalu) {
+                            const imageElement = document.getElementById("galleryImage");  // Zmienione na unikalne ID
+                            imageElement.src = data.ZdjęcieDetalu;  // Zaktualizuj źródło obrazu
+                        } else {
+                            alert("Nie znaleziono zdjęcia!");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Błąd: ", error);
+                        alert("Wystąpił problem z połączeniem.");
+                    });
+            } else {
+                alert("Proszę wpisać numer wewnętrzny!");
+            }
+        });
+        // let imagePaths = [];
+        // let currentImageIndex = 0;
+
+        // // Funkcja ładowania zdjęć z serwera PHP
+        // function loadImages() {
+        //     fetch('save.php?action=get_images')  // Poprawiony link
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             imagePaths = data.images; // Ścieżki obrazów
+        //             displayImage();
+        //         })
+        //         .catch(error => console.error("Błąd podczas ładowania obrazów:", error));
+        // }
+
+        // // Funkcja wyświetlania bieżącego zdjęcia
+        // function displayImage() {
+        //     const imageElement = document.getElementById("image");
+        //     if (imagePaths.length > 0) {
+        //         imageElement.src = "zdjecia_detale/" + imagePaths[currentImageIndex];  // Ścieżka do folderu ze zdjęciami
+        //     } else {
+        //         imageElement.src = ""; // Brak obrazu
+        //     }
+        // }
+
+        // // Obsługa przycisków "Następny" i "Poprzedni"
+        // document.getElementById("prev").addEventListener("click", () => {
+        //     if (currentImageIndex > 0) {
+        //         currentImageIndex--;
+        //         displayImage();
+        //     }
+        // });
+
+        // document.getElementById("next").addEventListener("click", () => {
+        //     if (currentImageIndex < imagePaths.length - 1) {
+        //         currentImageIndex++;
+        //         displayImage();
+        //     }
+        // });
+
+        // // Wczytaj obrazy przy starcie strony
+        // window.onload = loadImages;
+    </script>
+
+</body>
+</html>

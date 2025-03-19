@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwanie zdjęć</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header, footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            padding: 1rem;
+        }
+        nav {
+            width: 30%;
+            background: #f4f4f4;
+            padding: 1rem;
+        }
+        section {
+            flex: 1;
+            padding: 1rem;
+            background: #ddd;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input {
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+        #galleryImage {
+            max-width: 100%;
+            height: auto;
+        }
+        #tekst1{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h3>Baza Danych TechniPro</h3>
+    </header>
+    <main>
+        <nav>
+            <h2 id="tekst1">Dane wyrobu</h2>
+            <form id="DaneForm">
+                <div class="inp1">
+                    <input type="text" name="numerWew" id="numerWew" placeholder="Numer Wewnętrzny" style="width:400px ; height:50px;">
+                    <input type="text" name="NazwaDet" id="NazwaD" placeholder="Nazwa Detalu" style="width:400px ; height:50px;">
+                    <input type="text" name="NumerRysunku" id="NumerR" placeholder="Numer Rysunku" style="width:400px ; height:50px;">
+                    <br>
+                    <button type="submit" id="searchBtn">Szukaj</button>
+                </div>
+            </form>
+            <h3>Zdjęcie detalu:</h3>
+            <img id="image" src="" alt="Obrazek">
+            <div style="text-align: center;">
+                <button id="prev">◀ Poprzedni</button>
+                <button id="next">Następny ▶</button>
+            </div>
+            <h2 id="tekst1">Dane z etykiety</h2>
+            <form id="DaneFormu">
+                <div class="inp2">
+                    <input type="text" name="Liczby5" id="Liczbyost5" placeholder="5 ostatnich cyfr parti detalu" style="width:400px ; height:50px;">
+                    <input type="text" name="DataProdukcji" id="DataPro" placeholder="Data produkcji" style="width:400px ; height:50px;">
+                    <input type="text" name="operatorzy" id="operatorzy1" placeholder="Operatorzy" style="width:400px ; height:50px;">
+                </div>
+            </form>
+        </nav>
+        <section>
+            <h2 style="color:red;">Ilość sztuk oraz rodzaj wad</h2>
+            <form id="dataForm">
+                <!-- Pola do wpisywania danych -->
+                <div class="input-group">
+                    <input type="text" name="ilosc1" id="ilosc1" placeholder="Ilość">
+                    <input type="text" name="wada1" id="wada1" placeholder="Rodzaj wady">
+                </div>
+                <div class="input-group">
+                    <input type="text" name="ilosc2" id="ilosc2" placeholder="Ilość">
+                    <input type="text" name="wada2" id="wada2" placeholder="Rodzaj wady">
+                </div>
+                <div class="input-group">
+                    <input type="text" name="ilosc3" id="ilosc3" placeholder="Ilość">
+                    <input type="text" name="wada3" id="wada3" placeholder="Rodzaj wady">
+                </div>
+                <div class="input-group">
+                    <input type="text" name="ilosc4" id="ilosc4" placeholder="Ilość">
+                    <input type="text" name="wada4" id="wada4" placeholder="Rodzaj wady">
+                </div>
+                <div class="input-group">
+                    <input type="text" name="ilosc5" id="ilosc5" placeholder="Ilość">
+                    <input type="text" name="wada5" id="wada5" placeholder="Rodzaj wady">
+                </div>
+                <div class="input-group">
+                    <input type="text" name="ilosc6" id="ilosc6" placeholder="Ilość">
+                    <input type="text" name="wada6" id="wada6" placeholder="Rodzaj wady">
+                </div>
+                <h2>Operator i Data</h2>
+                <div class="input-group">
+                    <input type="text" name="operator" id="operator" placeholder="Nr Operatora">
+                    <input type="date" name="data" id="data">
+                </div>
+                <button type="submit" onclick="sendData()">Zapisz</button>
+            </form>
+            <p id="responseMessage"></p>
+        </section>
+    </main>
+
+    <script>
+        // Funkcja do wysyłania danych
+        function sendData() {
+    const numerWew = document.getElementById('numerWew').value;
+    const nazwaDetali = document.getElementById('NazwaD').value;
+    const numerRysunku = document.getElementById('NumerR').value;
+    // const zdjecieDetalu = "example/path/to/image.jpg"; // Ścieżka do zdjęcia, możesz ją dostosować.
+
+    // Tworzymy obiekt danych do wysłania
+    const data = {
+        NumerWewnętrzny: numerWew,
+        NazwaDetali: nazwaDetali,
+        NumerRysunku: numerRysunku,
+        //ZdjęcieDetalu: zdjecieDetalu
+    };
+
+    const formData = new FormData(document.getElementById('dataForm'));
+
+fetch('http://localhost/technipro/save.php', {
+    method: 'POST',
+    body: formData
+})
+.then(response => response.json())
+.then(data => {
+    document.getElementById('responseMessage').textContent = data.message;
+})
+.catch(error => console.error("Błąd: ", error));
+}
+
+    
+function loadImages() {
+    // Twoje zadanie do załadowania obrazów lub danych
+    console.log("Ładuję obrazy...");
+}
+        // Ładujemy obrazy, gdy strona jest załadowana
+        window.onload = loadImages;
+       let currentId = null;
+
+function loadDetail(queryParam, value) {
+    fetch(`http://localhost/technipro/save.php?${queryParam}=${value}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.ZdjęcieDetalu) {
+                const imageElement = document.getElementById("image");
+                const nazwaDetaliElement = document.getElementById("NazwaDetali");
+                const numerRysunkuElement = document.getElementById("NumerRysunku");
+
+                if (imageElement) {
+                    imageElement.src = "http://localhost/" + data.ZdjęcieDetalu; // Poprawiona ścieżka
+                }
+
+                if (nazwaDetaliElement) {
+                    nazwaDetaliElement.textContent = data.NazwaDetali;
+                }
+
+                if (numerRysunkuElement) {
+                    numerRysunkuElement.textContent = data.NumerRysunku;
+                }
+
+                currentId = data.id;
+            } else {
+                alert("Nie znaleziono detalu!");
+            }
+        })
+        // .catch(error => console.error("Błąd: ", error));
+}
+
+document.getElementById("searchBtn").addEventListener("click", () => {
+    let numer = document.getElementById("numerWew").value; // Poprawiony ID inputa
+    if (numer) {
+        loadDetail("numer_wewnętrzny", numer);
+    } else {
+        alert("Proszę wpisać numer wewnętrzny!");
+    }
+});
+
+document.getElementById("prev").addEventListener("click", () => {
+    if (currentId > 1) {
+        loadDetail("id", currentId - 1);
+    }
+});
+
+document.getElementById("next").addEventListener("click", () => {
+    loadDetail("id", currentId + 1);
+});
+
+// Załaduj pierwszy obrazek na start
+loadDetail("id", 1); // Załaduj pierwszy detal
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<?php
+header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Połączenie z bazą danych
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "bazadanych";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Sprawdzenie połączenia
+if ($conn->connect_error) {
+    die(json_encode(['status' => 'error', 'message' => 'Błąd połączenia: ' . $conn->connect_error]));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Walidacja danych
+    $ilosc1 = $_POST['ilosc1'] ?? 0;
+    $wada1 = $_POST['wada1'] ?? '';
+    $ilosc2 = $_POST['ilosc2'] ?? 0;
+    $wada2 = $_POST['wada2'] ?? '';
+    $ilosc3 = $_POST['ilosc3'] ?? 0;
+    $wada3 = $_POST['wada3'] ?? '';
+    $ilosc4 = $_POST['ilosc4'] ?? 0;
+    $wada4 = $_POST['wada4'] ?? '';
+    $ilosc5 = $_POST['ilosc5'] ?? 0;
+    $wada5 = $_POST['wada5'] ?? '';
+    $ilosc6 = $_POST['ilosc6'] ?? 0;
+    $wada6 = $_POST['wada6'] ?? '';
+    $operator = $_POST['operator'] ?? '';
+    $data = $_POST['data'] ?? date('Y-m-d');
+
+    // Zapis operatora
+    $stmt_operator = $conn->prepare("INSERT INTO operatorzy (operator, data) VALUES (?, ?)");
+    $stmt_operator->bind_param("ss", $operator, $data);
+    $stmt_operator->execute();
+    
+   
+    $stmt_wady = $conn->prepare("
+    INSERT INTO wady (ilosc1, wada1, ilosc2, wada2, ilosc3, wada3, ilosc4, wada4, ilosc5, wada5, ilosc6, wada6)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+");
+$stmt_wady->bind_param(
+    "ississississ", 
+    $ilosc1, $wada1, $ilosc2, $wada2, $ilosc3, $wada3, 
+    $ilosc4, $wada4, $ilosc5, $wada5, $ilosc6, $wada6
+);
+
+    if ($stmt_wady->execute()) {
+        echo json_encode(['status' => 'success', 'message' => 'Dane zapisane poprawnie!']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Błąd zapisu danych: ' . $stmt_wady->error]);
+    }
+
+    $stmt_operator->close();
+    $stmt_wady->close();
+}
+
+$conn->close();
+?>
